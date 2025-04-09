@@ -26,6 +26,49 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
+
+
+    const database = client.db('GreenEcoDB');
+    const usersCollection = database.collection('users');
+
+    // POST endpoint to save user data (with role)
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      // Add default role as 'user' if not specified
+      user.role = user.role || 'user'; // Changed from 'normal user' to 'user'
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'User already exists', insertedId: null });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // GET endpoint to retrieve user data (including role)
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
+    });
+
+    // PUT endpoint to update user role (for admins)
+    app.put('/users/:email/role', async (req, res) => {
+      const email = req.params.email;
+      const { role } = req.body;
+      // Validate role
+      const validRoles = ['admin', 'volunteer', 'user']; // Changed 'normal user' to 'user'
+      if (!validRoles.includes(role)) {
+        return res.status(400).send({ message: 'Invalid role' });
+      }
+      const query = { email: email };
+      const updateDoc = { $set: { role: role } };
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
@@ -34,8 +77,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 
 app.get('/', (req, res) => {
