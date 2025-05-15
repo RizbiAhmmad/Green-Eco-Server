@@ -45,6 +45,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users", async (req, res) => {
+      // console.log(req.headers);
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
     // GET endpoint to retrieve user data (including role)
     app.get('/users/:email', async (req, res) => {
       const email = req.params.email;
