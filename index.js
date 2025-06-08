@@ -30,12 +30,11 @@ async function run() {
 
     const database = client.db('GreenEcoDB');
     const usersCollection = database.collection('users');
+    const eventsCollection = database.collection('events');
 
     // POST endpoint to save user data (with role)
     app.post('/users', async (req, res) => {
       const user = req.body;
-      // Add default role as 'user' if not specified
-      user.role = user.role || 'user'; // Changed from 'normal user' to 'user'
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
       if (existingUser) {
@@ -91,6 +90,17 @@ app.delete('/users/:id', async (req, res) => {
   res.send(result);
 });
 
+
+app.post('/events', async (req, res) => {
+  const event = req.body;
+
+  if (!event.email || !event.role) {
+    return res.status(400).send({ message: 'User email and role are required' });
+  }
+
+  const result = await eventsCollection.insertOne(event);
+  res.send(result);
+});
 
 
 
